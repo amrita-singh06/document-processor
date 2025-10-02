@@ -2,10 +2,14 @@ from sentence_transformers import SentenceTransformer
 import chromadb
 from chromadb.config import Settings
 from config import CHROMA_DB_DIR
+from chromadb import Client
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
-chroma_client = chromadb.Client(Settings(chroma_db_impl="duckdb+parquet", persist_directory=CHROMA_DB_DIR))
+#chroma_client = chromadb.Client(Settings(chroma_db_impl="sqlite", persist_directory=CHROMA_DB_DIR))
+#chroma_client = Client(persist_directory=CHROMA_DB_DIR)
+chroma_client = chromadb.PersistentClient(path=CHROMA_DB_DIR)
+
 
 collection = chroma_client.get_or_create_collection(name="documents")
 
