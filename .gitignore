@@ -1,2 +1,4 @@
 __pycache__/
 chroma_db/
+storage/
+db/documents.db

@@ -1,11 +1,17 @@
 from fastapi import FastAPI
-from api import upload
-from db.models import init_db
+from api.upload import router as upload_router
+from api.ingest import router as ingest_router
+from api.query import router as query_router
 
-app = FastAPI(title="Document Upload and Embedding API")
 
-app.include_router(upload.router)
+app = FastAPI(title="Document Processor API")
 
-@app.on_event("startup")
-def startup():
-    init_db()
+# Register routers
+app.include_router(upload_router)
+app.include_router(ingest_router)
+app.include_router(query_router)
+
+
+@app.get("/")
+def root():
+    return {"message": "Welcome to Document Processor API"}

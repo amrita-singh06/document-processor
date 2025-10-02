@@ -1,30 +1,34 @@
 from fastapi import APIRouter, UploadFile, File
 import shutil
+from pathlib import Path
 import uuid
-import os
-from db.models import Document, SessionLocal
-from api.parse import parse_document
-from embeddings.embedder import generate_and_store_embedding
-from config import STORAGE_DIR
+
+from config import UPLOAD_DIR
+from parser.parse import parse_pdf
+from embeddings.embedder import store_embeddings
 
 router = APIRouter()
 
 @router.post("/upload/")
 async def upload_file(file: UploadFile = File(...)):
-    doc_id = str(uuid.uuid4())
-    file_path = os.path.join(STORAGE_DIR, f"{doc_id}_{file.filename}")
-    
+    # Save file to disk in streaming mode
+    file_path = UPLOAD_DIR / file.filename
     with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+        shutil.copyfileobj(file.file, buffer, length=1024*1024)  # 1MB chunks
 
-    content = parse_document(file_path)
-    
-    db = SessionLocal()
-    doc = Document(file_name=file.filename, file_path=file_path, content=content)
-    db.add(doc)
-    db.commit()
-    db.refresh(doc)
-    
-    generate_and_store_embedding(doc.id, content)
-    
-    return {"document_id": doc.id, "file_name": file.filename}
+    # Generate a unique document ID
+    doc_id = str(uuid.uuid4())
+
+    # Parse PDF into chunks
+    chunks = parse_pdf(file_path)
+
+    # Store embeddings in Chroma
+    store_embeddings(chunks, metadata=[{"file": file.filename}] * len(chunks), doc_id=doc_id)
+
+    return {
+        "file_name": file.filename,
+        "document_id": doc_id,
+        "chunks_stored": len(chunks),
+        "size_mb": round(file_path.stat().st_size / (1024*1024), 2),
+        "status": "success"
+    }
