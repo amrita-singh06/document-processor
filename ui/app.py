@@ -1,9 +1,9 @@
 import streamlit as st
 import requests
 
-UPLOAD_API = "http://localhost:8000/upload/"
-INGEST_API = "http://localhost:8000/ingest-url/"
-QUERY_API = "http://localhost:8000/query/"  # you need to implement backend query API
+UPLOAD_API = "http://localhost:9000/upload/"
+INGEST_API = "http://localhost:9000/ingest-url/"
+QUERY_API = "http://localhost:9000/query/"  # you need to implement backend query API
 
 st.set_page_config(page_title="Document Analyzer", layout="wide")
 
